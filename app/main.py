@@ -42,11 +42,11 @@ app.add_middleware(
 )
 
 # Configurações
-ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
-ANTHROPIC_MODEL = os.getenv('ANTHROPIC_MODEL', 'claude-3-5-sonnet-20241022')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
 
-if not ANTHROPIC_API_KEY:
-    logger.warning("⚠️ ANTHROPIC_API_KEY não configurada!")
+if not OPENAI_API_KEY:
+    logger.warning("⚠️ OPENAI_API_KEY não configurada!")
 
 
 # ═══════════════════════════════════════════════════════════
@@ -98,7 +98,8 @@ async def health():
     return {
         "status": "healthy",
         "service": "v-llm-directors",
-        "anthropic_configured": bool(ANTHROPIC_API_KEY)
+        "openai_configured": bool(OPENAI_API_KEY),
+        "model": OPENAI_MODEL
     }
 
 
@@ -128,10 +129,10 @@ async def plan_motion_graphics(request: MotionGraphicsPlanRequest):
     Este director recebe contexto COMPLETO (incluindo posições de texto)
     e planeja estrategicamente onde/quando colocar motion graphics.
     """
-    if not ANTHROPIC_API_KEY:
+    if not OPENAI_API_KEY:
         raise HTTPException(
             status_code=500,
-            detail="ANTHROPIC_API_KEY não configurada"
+            detail="OPENAI_API_KEY não configurada"
         )
     
     try:
@@ -143,8 +144,8 @@ async def plan_motion_graphics(request: MotionGraphicsPlanRequest):
         
         # Chamar Director
         director = get_motion_graphics_director_0(
-            api_key=ANTHROPIC_API_KEY,
-            model=ANTHROPIC_MODEL
+            api_key=OPENAI_API_KEY,
+            model=OPENAI_MODEL
         )
         
         result = await director.plan(
@@ -170,10 +171,10 @@ async def plan_motion_graphics_simple(request: Dict):
     Aceita contexto raw sem validação estrita.
     Útil para testes e integrações rápidas.
     """
-    if not ANTHROPIC_API_KEY:
+    if not OPENAI_API_KEY:
         raise HTTPException(
             status_code=500,
-            detail="ANTHROPIC_API_KEY não configurada"
+            detail="OPENAI_API_KEY não configurada"
         )
     
     try:
@@ -192,8 +193,8 @@ async def plan_motion_graphics_simple(request: Dict):
         
         # Chamar Director
         director = get_motion_graphics_director_0(
-            api_key=ANTHROPIC_API_KEY,
-            model=ANTHROPIC_MODEL
+            api_key=OPENAI_API_KEY,
+            model=OPENAI_MODEL
         )
         
         result = await director.plan(
@@ -219,8 +220,8 @@ async def plan_motion_graphics_simple(request: Dict):
 async def startup_event():
     """Evento de startup"""
     logger.info("🎬 V-LLM Directors iniciando...")
-    logger.info(f"   Anthropic API: {'✅ Configurada' if ANTHROPIC_API_KEY else '❌ Não configurada'}")
-    logger.info(f"   Model: {ANTHROPIC_MODEL}")
+    logger.info(f"   OpenAI API: {'✅ Configurada' if OPENAI_API_KEY else '❌ Não configurada'}")
+    logger.info(f"   Model: {OPENAI_MODEL}")
     logger.info("✅ V-LLM Directors pronto!")
 
 

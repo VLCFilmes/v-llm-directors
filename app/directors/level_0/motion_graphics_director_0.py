@@ -23,7 +23,7 @@ import json
 import logging
 from pathlib import Path
 from typing import Dict, Optional
-from anthropic import Anthropic
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -35,12 +35,12 @@ class MotionGraphicsDirector0:
     Planeja motion graphics estratégicos baseado em contexto completo.
     """
     
-    def __init__(self, api_key: str, model: str = "claude-3-5-sonnet-20241022"):
-        self.client = Anthropic(api_key=api_key)
+    def __init__(self, api_key: str, model: str = "gpt-3.5-turbo"):
+        self.client = OpenAI(api_key=api_key)
         self.model = model
         self.system_prompt = self._load_system_prompt()
         self.examples = self._load_examples()
-        logger.info("🎬 MotionGraphicsDirector0 inicializado")
+        logger.info(f"🎬 MotionGraphicsDirector0 inicializado (model: {model})")
     
     def _load_system_prompt(self) -> str:
         """Carrega system prompt do arquivo"""
@@ -88,23 +88,33 @@ class MotionGraphicsDirector0:
                     "total": 3,
                     "reasoning": "..."
                 },
-                "tokens_used": 1234
+                "llm_usage": {
+                    "model": "gpt-3.5-turbo",
+                    "input_tokens": 1234,
+                    "output_tokens": 567,
+                    "total_tokens": 1801
+                }
             }
         """
         logger.info(f"🎬 [DIRECTOR0] Planejando motion graphics...")
         logger.info(f"   Prompt: {user_prompt[:100]}...")
+        logger.info(f"   Model: {self.model}")
         
         try:
             # Montar mensagem para LLM
             user_message = self._build_user_message(user_prompt, context)
             
-            # Chamar Claude
-            response = self.client.messages.create(
+            # Chamar OpenAI
+            response = self.client.chat.completions.create(
                 model=self.model,
                 max_tokens=max_tokens,
                 temperature=0.7,  # Criatividade moderada
-                system=self.system_prompt,
+                response_format={"type": "json_object"},  # Force JSON output
                 messages=[
+                    {
+                        "role": "system",
+                        "content": self.system_prompt
+                    },
                     {
                         "role": "user",
                         "content": user_message
@@ -113,7 +123,7 @@ class MotionGraphicsDirector0:
             )
             
             # Extrair resposta
-            response_text = response.content[0].text
+            response_text = response.choices[0].message.content
             
             # Parse JSON
             try:
@@ -140,12 +150,20 @@ class MotionGraphicsDirector0:
             
             logger.info(f"✅ [DIRECTOR0] Plano criado: {len(plan['motion_graphics'])} MGs")
             
+            # Extrair usage
+            usage = response.usage
+            
             return {
                 "status": "success",
                 "level": 0,
                 "director": "MotionGraphicsDirector0",
                 "plan": plan,
-                "tokens_used": response.usage.input_tokens + response.usage.output_tokens
+                "llm_usage": {
+                    "model": self.model,
+                    "input_tokens": usage.prompt_tokens,
+                    "output_tokens": usage.completion_tokens,
+                    "total_tokens": usage.total_tokens
+                }
             }
         
         except Exception as e:
@@ -154,7 +172,8 @@ class MotionGraphicsDirector0:
                 "status": "error",
                 "level": 0,
                 "director": "MotionGraphicsDirector0",
-                "error": str(e)
+                "error": str(e),
+                "details": str(type(e).__name__)
             }
     
     def _build_user_message(self, user_prompt: str, context: Dict) -> str:
@@ -207,7 +226,7 @@ Analise o contexto acima e crie um plano de motion graphics que:
 4. Criem antecipação e retenção visual
 5. Sejam balanceados ao longo do vídeo (máximo 5 MGs)
 
-Retorne APENAS o JSON com o plano, seguindo exatamente o formato especificado no system prompt.
+Retorne APENAS JSON válido com o plano, seguindo exatamente o formato especificado no system prompt.
 """
         
         return message
@@ -221,5 +240,5 @@ def get_motion_graphics_director_0(api_key: str, model: str = None) -> MotionGra
     """Retorna instância singleton (ou cria nova se mudar API key)"""
     global _director
     if _director is None:
-        _director = MotionGraphicsDirector0(api_key, model or "claude-3-5-sonnet-20241022")
+        _director = MotionGraphicsDirector0(api_key, model or "gpt-3.5-turbo")
     return _director

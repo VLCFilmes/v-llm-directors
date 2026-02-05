@@ -66,7 +66,7 @@ pip install -r requirements.txt
 
 # Configurar variáveis de ambiente
 cp .env.example .env
-# Editar .env com sua API key da Anthropic
+# Editar .env com sua API key da OpenAI
 
 # Rodar
 python -m uvicorn app.main:app --reload --port 5025
@@ -227,7 +227,7 @@ for mg in mg_plan['motion_graphics']:
 
 ## 🔐 Segurança
 
-- API Key da Anthropic via variável de ambiente
+- API Key da OpenAI via variável de ambiente
 - Rate limiting configurável
 - Timeout protection
 - Logs completos de decisões
