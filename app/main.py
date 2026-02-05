@@ -12,8 +12,8 @@ import logging
 import os
 from dotenv import load_dotenv
 
-from directors.level_0.motion_graphics_director_0 import get_motion_graphics_director_0
-from orchestrator.context_builder import get_context_builder
+from app.directors.level_0.motion_graphics_director_0 import get_motion_graphics_director_0
+from app.orchestrator.context_builder import get_context_builder
 
 # Carregar variáveis de ambiente
 load_dotenv()

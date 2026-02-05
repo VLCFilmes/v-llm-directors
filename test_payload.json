@@ -1,0 +1,30 @@
+{
+  "user_prompt": "Crie uma seta apontando para a palavra importante e grife o benefício principal",
+  "context": {
+    "transcription": "Bem-vindo ao nosso tutorial. Aprenda a economizar tempo com nossa ferramenta revolucionária.",
+    "words": [
+      {"word": "tutorial", "start_time": 0.5, "end_time": 1.0, "confidence": 0.95, "emphasis": true},
+      {"word": "economizar", "start_time": 2.0, "end_time": 2.5, "confidence": 0.98, "emphasis": true},
+      {"word": "revolucionária", "start_time": 3.5, "end_time": 4.2, "confidence": 0.92, "emphasis": true}
+    ],
+    "text_layout": [
+      {
+        "id": "sentence_001",
+        "text": "Bem-vindo ao nosso tutorial",
+        "position": {"x": 100, "y": 300, "width": 880, "height": 100},
+        "timing": {"start_time": 0.0, "end_time": 2.0},
+        "words": ["Bem-vindo", "ao", "nosso", "tutorial"]
+      },
+      {
+        "id": "sentence_002",
+        "text": "Economizar tempo",
+        "position": {"x": 150, "y": 800, "width": 780, "height": 120},
+        "timing": {"start_time": 2.0, "end_time": 4.0},
+        "words": ["Economizar", "tempo"]
+      }
+    ],
+    "canvas": {"width": 1080, "height": 1920},
+    "duration": 5.0,
+    "style": "modern"
+  }
+}

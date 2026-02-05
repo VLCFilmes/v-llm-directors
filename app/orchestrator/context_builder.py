@@ -50,8 +50,8 @@ class ContextBuilder:
         emphasis_words = [
             {
                 'word': w['word'],
-                'start': w['start'],
-                'end': w['end']
+                'start': w.get('start_time', w.get('start', 0)),
+                'end': w.get('end_time', w.get('end', 0))
             }
             for w in words if w.get('emphasis', False)
         ]
@@ -120,10 +120,19 @@ class ContextBuilder:
         mapped = []
         
         for group in text_layout:
-            for word_data in group.get('words', []):
-                word_text = word_data.get('text', '')
-                position = word_data.get('canvas_position', {})
-                dimensions = word_data.get('dimensions', {})
+            group_words = group.get('words', [])
+            group_position = group.get('position', {})
+            
+            for word_data in group_words:
+                # word_data pode ser string ou dict
+                if isinstance(word_data, str):
+                    word_text = word_data
+                    position = group_position  # usar posição do grupo
+                    dimensions = {}
+                else:
+                    word_text = word_data.get('text', '')
+                    position = word_data.get('canvas_position', group_position)
+                    dimensions = word_data.get('dimensions', {})
                 
                 # Encontrar timing da palavra
                 timing = next(
@@ -136,8 +145,8 @@ class ContextBuilder:
                         'word': word_text,
                         'position': position,
                         'dimensions': dimensions,
-                        'start': timing.get('start', 0),
-                        'end': timing.get('end', 0),
+                        'start': timing.get('start_time', timing.get('start', 0)),
+                        'end': timing.get('end_time', timing.get('end', 0)),
                         'emphasis': timing.get('emphasis', False)
                     })
         
