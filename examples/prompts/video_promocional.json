@@ -1,0 +1,58 @@
+{
+  "description": "Vídeo promocional de produto",
+  "user_prompt": "Destaque os benefícios e chame atenção para o CTA",
+  "context": {
+    "transcription": "Apresentamos o novo app revolucionário. Economize tempo. Aumente produtividade. Comece grátis hoje!",
+    "words": [
+      {"word": "novo", "start_time": 0.5, "end_time": 0.8, "confidence": 0.98, "emphasis": true},
+      {"word": "revolucionário", "start_time": 0.9, "end_time": 1.5, "confidence": 0.96, "emphasis": true},
+      {"word": "Economize", "start_time": 2.0, "end_time": 2.5, "confidence": 0.97, "emphasis": true},
+      {"word": "tempo", "start_time": 2.6, "end_time": 2.9, "confidence": 0.99, "emphasis": true},
+      {"word": "Aumente", "start_time": 3.5, "end_time": 3.9, "confidence": 0.98, "emphasis": true},
+      {"word": "produtividade", "start_time": 4.0, "end_time": 4.8, "confidence": 0.95, "emphasis": true},
+      {"word": "Comece", "start_time": 5.5, "end_time": 5.9, "confidence": 0.99, "emphasis": true},
+      {"word": "grátis", "start_time": 6.0, "end_time": 6.4, "confidence": 0.98, "emphasis": true},
+      {"word": "hoje", "start_time": 6.5, "end_time": 6.9, "confidence": 0.99, "emphasis": true}
+    ],
+    "text_layout": [
+      {
+        "id": "sentence_001",
+        "text": "Novo App Revolucionário",
+        "position": {"x": 140, "y": 400, "width": 800, "height": 150},
+        "timing": {"start_time": 0.0, "end_time": 2.0},
+        "words": ["Novo", "App", "Revolucionário"]
+      },
+      {
+        "id": "sentence_002",
+        "text": "Economize Tempo",
+        "position": {"x": 200, "y": 700, "width": 680, "height": 100},
+        "timing": {"start_time": 2.0, "end_time": 3.5},
+        "words": ["Economize", "Tempo"]
+      },
+      {
+        "id": "sentence_003",
+        "text": "Aumente Produtividade",
+        "position": {"x": 180, "y": 1000, "width": 720, "height": 100},
+        "timing": {"start_time": 3.5, "end_time": 5.0},
+        "words": ["Aumente", "Produtividade"]
+      },
+      {
+        "id": "sentence_004",
+        "text": "Comece Grátis Hoje!",
+        "position": {"x": 220, "y": 1400, "width": 640, "height": 120},
+        "timing": {"start_time": 5.5, "end_time": 7.5},
+        "words": ["Comece", "Grátis", "Hoje"]
+      }
+    ],
+    "canvas": {
+      "width": 1080,
+      "height": 1920
+    },
+    "duration": 8.0,
+    "style": {
+      "primary_color": "#00D4FF",
+      "accent_color": "#7B2FFF",
+      "theme": "modern"
+    }
+  }
+}

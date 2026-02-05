@@ -1,0 +1,86 @@
+{
+  "examples": [
+    {
+      "name": "Tutorial com 3 passos",
+      "user_prompt": "Destaque os passos principais",
+      "context_summary": "Vídeo tutorial com 3 passos: PRIMEIRO, SEGUNDO, TERCEIRO",
+      "expected_output": {
+        "motion_graphics": [
+          {
+            "id": "mg_001",
+            "type": "circle_attention",
+            "target_word": "PRIMEIRO",
+            "timing": {"start": 3.0, "duration": 1.0},
+            "config": {"color": "#FF6B35", "pulses": 1}
+          },
+          {
+            "id": "mg_002",
+            "type": "circle_attention",
+            "target_word": "SEGUNDO",
+            "timing": {"start": 7.3, "duration": 1.0},
+            "config": {"color": "#4CAF50", "pulses": 1}
+          },
+          {
+            "id": "mg_003",
+            "type": "circle_attention",
+            "target_word": "TERCEIRO",
+            "timing": {"start": 11.6, "duration": 1.0},
+            "config": {"color": "#2196F3", "pulses": 1}
+          }
+        ],
+        "total": 3,
+        "reasoning": "Círculos pulsantes para sequência de passos"
+      }
+    },
+    {
+      "name": "Vídeo promocional",
+      "user_prompt": "Crie setas e grifados para chamar atenção",
+      "context_summary": "Vídeo promocional com palavras OFERTA LIMITADA e GRÁTIS",
+      "expected_output": {
+        "motion_graphics": [
+          {
+            "id": "mg_001",
+            "type": "oval_highlight",
+            "target_word": "LIMITADA",
+            "timing": {"start": 4.3, "duration": 1.2},
+            "config": {"color": "#FF6B35", "imperfect": true}
+          },
+          {
+            "id": "mg_002",
+            "type": "arrow_pointing",
+            "target_word": "GRÁTIS",
+            "timing": {"start": 8.0, "duration": 0.8},
+            "config": {"direction": "down", "color": "#4CAF50", "bounce": true}
+          }
+        ],
+        "total": 2,
+        "reasoning": "Oval hand-drawn para urgência, seta com bounce para benefício"
+      }
+    },
+    {
+      "name": "Vídeo educacional",
+      "user_prompt": "Grife conceitos importantes",
+      "context_summary": "Vídeo educacional com 2 conceitos-chave em emphasis",
+      "expected_output": {
+        "motion_graphics": [
+          {
+            "id": "mg_001",
+            "type": "underline",
+            "target_word": "fotossíntese",
+            "timing": {"start": 5.8, "duration": 0.8},
+            "config": {"style": "straight", "color": "#4CAF50"}
+          },
+          {
+            "id": "mg_002",
+            "type": "underline",
+            "target_word": "clorofila",
+            "timing": {"start": 9.2, "duration": 0.8},
+            "config": {"style": "straight", "color": "#4CAF50"}
+          }
+        ],
+        "total": 2,
+        "reasoning": "Sublinhados para conceitos científicos, mantendo estilo educacional clean"
+      }
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "status": "success",
+  "director": "MotionGraphicsDirector0",
+  "plan": {
+    "motion_graphics": [
+      {
+        "id": "mg_001",
+        "type": "underline",
+        "target_word": "revolucionário",
+        "target_element_id": "sentence_001",
+        "timing": {
+          "start_time": 0.8,
+          "duration": 1.0
+        },
+        "config": {
+          "color": "#7B2FFF",
+          "stroke_width": 6,
+          "style": "energetic",
+          "offset_y": 10
+        },
+        "justification": "Reforçar diferencial competitivo principal do produto"
+      },
+      {
+        "id": "mg_002",
+        "type": "checkmark",
+        "target_word": "Economize",
+        "target_element_id": "sentence_002",
+        "timing": {
+          "start_time": 1.9,
+          "duration": 0.6
+        },
+        "config": {
+          "color": "#00D4FF",
+          "size": 80,
+          "stroke_width": 8,
+          "position_offset": {"x": -100, "y": 0}
+        },
+        "justification": "Validar benefício com símbolo positivo (checkmark à esquerda)"
+      },
+      {
+        "id": "mg_003",
+        "type": "checkmark",
+        "target_word": "Aumente",
+        "target_element_id": "sentence_003",
+        "timing": {
+          "start_time": 3.4,
+          "duration": 0.6
+        },
+        "config": {
+          "color": "#00D4FF",
+          "size": 80,
+          "stroke_width": 8,
+          "position_offset": {"x": -100, "y": 0}
+        },
+        "justification": "Manter consistência visual com benefício anterior"
+      },
+      {
+        "id": "mg_004",
+        "type": "circle_attention",
+        "target_word": "grátis",
+        "target_element_id": "sentence_004",
+        "timing": {
+          "start_time": 5.9,
+          "duration": 1.5
+        },
+        "config": {
+          "color": "#7B2FFF",
+          "stroke_width": 8,
+          "fill_opacity": 0.15,
+          "pulses": 3
+        },
+        "justification": "Maximizar atenção na proposta de valor (grátis) com múltiplos pulsos"
+      }
+    ],
+    "reasoning": {
+      "strategy": "Criar padrão visual de validação (checkmarks) nos benefícios e explodir atenção no CTA com círculo pulsante. Usar cores alternadas (azul/roxo) para criar ritmo visual.",
+      "total_elements": 4,
+      "empty_spaces_used": [
+        "left_side (mg_002, mg_003)",
+        "around_cta (mg_004)"
+      ],
+      "avoided_overlaps": true,
+      "timing_strategy": "Sincronizar checkmarks rapidamente (0.6s) para criar ritmo dinâmico. CTA recebe animação mais longa (1.5s) para manter foco."
+    }
+  },
+  "llm_usage": {
+    "model": "claude-3-5-sonnet-20241022",
+    "input_tokens": 2523,
+    "output_tokens": 445,
+    "total_tokens": 2968
+  },
+  "timestamp": "2026-02-05T10:47:12.789Z"
+}

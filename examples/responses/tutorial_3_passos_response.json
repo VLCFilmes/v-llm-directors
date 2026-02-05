@@ -1,0 +1,112 @@
+{
+  "status": "success",
+  "director": "MotionGraphicsDirector0",
+  "plan": {
+    "motion_graphics": [
+      {
+        "id": "mg_001",
+        "type": "arrow_pointing",
+        "target_word": "1",
+        "target_element_id": "sentence_002",
+        "timing": {
+          "start_time": 1.8,
+          "duration": 0.8
+        },
+        "config": {
+          "direction": "down_left",
+          "color": "#FF6B35",
+          "stroke_width": 8,
+          "animation_style": "draw_in"
+        },
+        "justification": "Chamar atenção para o primeiro passo no início do tutorial"
+      },
+      {
+        "id": "mg_002",
+        "type": "oval_highlight",
+        "target_word": "aplicativo",
+        "target_element_id": "sentence_002",
+        "timing": {
+          "start_time": 2.4,
+          "duration": 1.0
+        },
+        "config": {
+          "color": "#F7931E",
+          "stroke_width": 6,
+          "padding": 15,
+          "style": "hand_drawn",
+          "rotation": -3
+        },
+        "justification": "Destacar a ação principal do passo 1"
+      },
+      {
+        "id": "mg_003",
+        "type": "arrow_pointing",
+        "target_word": "2",
+        "target_element_id": "sentence_003",
+        "timing": {
+          "start_time": 4.2,
+          "duration": 0.8
+        },
+        "config": {
+          "direction": "down_left",
+          "color": "#FF6B35",
+          "stroke_width": 8,
+          "animation_style": "draw_in"
+        },
+        "justification": "Indicar transição para o segundo passo"
+      },
+      {
+        "id": "mg_004",
+        "type": "rectangle_highlight",
+        "target_word": "configurações",
+        "target_element_id": "sentence_003",
+        "timing": {
+          "start_time": 4.9,
+          "duration": 1.2
+        },
+        "config": {
+          "color": "#F7931E",
+          "stroke_width": 5,
+          "padding": 12,
+          "corner_radius": 10
+        },
+        "justification": "Enfatizar elemento técnico importante do passo 2"
+      },
+      {
+        "id": "mg_005",
+        "type": "circle_attention",
+        "target_word": "Salve",
+        "target_element_id": "sentence_004",
+        "timing": {
+          "start_time": 7.0,
+          "duration": 1.5
+        },
+        "config": {
+          "color": "#FF6B35",
+          "stroke_width": 7,
+          "fill_opacity": 0.1,
+          "pulses": 2
+        },
+        "justification": "Reforçar ação crítica do passo final com animação de pulso"
+      }
+    ],
+    "reasoning": {
+      "strategy": "Usar setas para números dos passos (criar fluxo visual sequencial) e diferentes tipos de grifados para ações-chave (variar para manter interesse visual)",
+      "total_elements": 5,
+      "empty_spaces_used": [
+        "top_left (mg_001)",
+        "mid_right (mg_003)",
+        "top_center (mg_005)"
+      ],
+      "avoided_overlaps": true,
+      "timing_strategy": "Antecipar ligeiramente cada MG (200-300ms antes da palavra) para criar expectativa e guiar olhar"
+    }
+  },
+  "llm_usage": {
+    "model": "claude-3-5-sonnet-20241022",
+    "input_tokens": 2845,
+    "output_tokens": 512,
+    "total_tokens": 3357
+  },
+  "timestamp": "2026-02-05T10:45:23.456Z"
+}

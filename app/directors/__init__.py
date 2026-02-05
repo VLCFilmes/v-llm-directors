@@ -1,0 +1,3 @@
+"""
+Directors package
+"""

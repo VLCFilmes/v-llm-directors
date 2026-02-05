@@ -1,0 +1,63 @@
+{
+  "description": "Vídeo tutorial com 3 passos",
+  "user_prompt": "Crie setas apontando para os números dos passos e grife as palavras importantes",
+  "context": {
+    "transcription": "Bem-vindo ao tutorial. Passo 1: Abra o aplicativo. Passo 2: Clique em configurações. Passo 3: Salve suas preferências.",
+    "words": [
+      {"word": "Bem-vindo", "start_time": 0.0, "end_time": 0.5, "confidence": 0.98},
+      {"word": "tutorial", "start_time": 0.6, "end_time": 1.0, "confidence": 0.95, "emphasis": true},
+      {"word": "Passo", "start_time": 1.5, "end_time": 1.8, "confidence": 0.99, "emphasis": true},
+      {"word": "1", "start_time": 1.9, "end_time": 2.0, "confidence": 0.99, "emphasis": true},
+      {"word": "Abra", "start_time": 2.1, "end_time": 2.4, "confidence": 0.97, "emphasis": true},
+      {"word": "aplicativo", "start_time": 2.5, "end_time": 3.0, "confidence": 0.96, "emphasis": true},
+      {"word": "Passo", "start_time": 4.0, "end_time": 4.3, "confidence": 0.99, "emphasis": true},
+      {"word": "2", "start_time": 4.4, "end_time": 4.5, "confidence": 0.99, "emphasis": true},
+      {"word": "Clique", "start_time": 4.6, "end_time": 4.9, "confidence": 0.98, "emphasis": true},
+      {"word": "configurações", "start_time": 5.0, "end_time": 5.7, "confidence": 0.97, "emphasis": true},
+      {"word": "Passo", "start_time": 6.5, "end_time": 6.8, "confidence": 0.99, "emphasis": true},
+      {"word": "3", "start_time": 6.9, "end_time": 7.0, "confidence": 0.99, "emphasis": true},
+      {"word": "Salve", "start_time": 7.1, "end_time": 7.4, "confidence": 0.98, "emphasis": true},
+      {"word": "preferências", "start_time": 7.5, "end_time": 8.2, "confidence": 0.96, "emphasis": true}
+    ],
+    "text_layout": [
+      {
+        "id": "sentence_001",
+        "text": "Bem-vindo ao tutorial",
+        "position": {"x": 100, "y": 200, "width": 880, "height": 100},
+        "timing": {"start_time": 0.0, "end_time": 2.0},
+        "words": ["Bem-vindo", "ao", "tutorial"]
+      },
+      {
+        "id": "sentence_002",
+        "text": "Passo 1: Abra o aplicativo",
+        "position": {"x": 100, "y": 500, "width": 880, "height": 120},
+        "timing": {"start_time": 1.5, "end_time": 4.0},
+        "words": ["Passo", "1", "Abra", "o", "aplicativo"]
+      },
+      {
+        "id": "sentence_003",
+        "text": "Passo 2: Clique em configurações",
+        "position": {"x": 100, "y": 800, "width": 880, "height": 120},
+        "timing": {"start_time": 4.0, "end_time": 6.5},
+        "words": ["Passo", "2", "Clique", "em", "configurações"]
+      },
+      {
+        "id": "sentence_004",
+        "text": "Passo 3: Salve suas preferências",
+        "position": {"x": 100, "y": 1100, "width": 880, "height": 120},
+        "timing": {"start_time": 6.5, "end_time": 9.0},
+        "words": ["Passo", "3", "Salve", "suas", "preferências"]
+      }
+    ],
+    "canvas": {
+      "width": 1080,
+      "height": 1920
+    },
+    "duration": 10.0,
+    "style": {
+      "primary_color": "#FF6B35",
+      "accent_color": "#F7931E",
+      "theme": "tutorial"
+    }
+  }
+}
