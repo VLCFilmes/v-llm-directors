@@ -76,7 +76,7 @@ class VisualLayoutDirector1:
         self,
         user_prompt: str,
         context: Dict,
-        max_tokens: int = 8000,
+        max_tokens: int = 16000,
         reference_image_url: Optional[str] = None,
     ) -> Dict:
         """
@@ -247,21 +247,37 @@ class VisualLayoutDirector1:
         """Monta a lista de messages para a chamada LLM."""
         messages = [{"role": "system", "content": self.system_prompt}]
 
-        # Few-shot examples (resumidos para economizar tokens)
+        # Few-shot examples (completos para melhor qualidade)
         examples = self.examples.get("examples", [])
         if examples:
-            examples_text = "## FEW-SHOT EXAMPLES\n\n"
-            for ex in examples[:2]:  # Máx 2 exemplos
-                examples_text += (
-                    f"### Example: {ex['name']}\n"
-                    f"**Prompt:** {ex['user_prompt']}\n"
-                    f"**Output:** (see expected_output in training data)\n\n"
-                )
-            messages.append({"role": "user", "content": examples_text})
+            # Enviar 1º exemplo completo como par user/assistant
+            ex1 = examples[0]
+            ex1_prompt = (
+                f"## FEW-SHOT EXAMPLE\n\n"
+                f"### {ex1['name']}\n"
+                f"**Prompt:** {ex1['user_prompt']}\n"
+                f"**Canvas:** {ex1['canvas']['width']}x{ex1['canvas']['height']}\n"
+            )
+            messages.append({"role": "user", "content": ex1_prompt})
             messages.append({
                 "role": "assistant",
-                "content": json.dumps(examples[0]["expected_output"], ensure_ascii=False)[:2000],
+                "content": json.dumps(ex1["expected_output"], ensure_ascii=False),
             })
+
+            # Enviar 2º exemplo completo se disponível (melhora diversidade)
+            if len(examples) > 1:
+                ex2 = examples[1]
+                ex2_prompt = (
+                    f"## ANOTHER EXAMPLE\n\n"
+                    f"### {ex2['name']}\n"
+                    f"**Prompt:** {ex2['user_prompt']}\n"
+                    f"**Canvas:** {ex2['canvas']['width']}x{ex2['canvas']['height']}\n"
+                )
+                messages.append({"role": "user", "content": ex2_prompt})
+                messages.append({
+                    "role": "assistant",
+                    "content": json.dumps(ex2["expected_output"], ensure_ascii=False),
+                })
 
         # User message com contexto
         user_message = self._build_user_message(user_prompt, context)
@@ -338,14 +354,17 @@ class VisualLayoutDirector1:
 """
 
         message += """
-### Instructions
+### ⚠️ CRITICAL Instructions
 
-Generate the visual layout following the system prompt rules:
-1. Decompose into individual layers (each with its own HTML)
-2. Define animation per layer
-3. Use SVG for stroke_reveal elements
-4. Keep 3-8 layers per scene
-5. Return valid JSON matching the output schema
+Generate the visual layout following ALL rules:
+1. **Generate ALL scenes** — One scene object for EACH scene_description. Do NOT skip any.
+2. **Minimum 4 layers per scene** — background + title + decorative shape/glow + subtitle or CTA.
+3. **Rich backgrounds** — Use multi-stop gradients, never plain solid colors.
+4. **Add decorative layers** — Glow orbs, geometric shapes, subtle patterns for atmosphere and depth.
+5. **Animate most layers** — At least 60% should be `is_static: false`. Use staggered delays.
+6. **Use ambient motion** — Add `loop` animations (pulse, float) to shapes/glows for life.
+7. **Use text from the script** — Title/subtitle text comes from scene_descriptions, not invented.
+8. Return valid JSON matching the output schema.
 """
 
         return message
