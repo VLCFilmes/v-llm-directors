@@ -805,22 +805,24 @@ body {{ width:{canvas_width}px; height:{canvas_height}px; background:#000; overf
 
             # ── Aplicar layer-level updates via JS ──
             if style_updates:
-                js_code = "const updates = arguments[0];\n"
-                js_code += "for (const u of updates) {\n"
-                js_code += "  const el = document.getElementById('layer-' + u.idx);\n"
-                js_code += "  if (el) el.style.cssText = 'position:absolute;inset:0;z-index:' + el.style.zIndex + ';' + u.css;\n"
-                js_code += "}\n"
+                js_code = "(updates) => {\n"
+                js_code += "  for (const u of updates) {\n"
+                js_code += "    const el = document.getElementById('layer-' + u.idx);\n"
+                js_code += "    if (el) el.style.cssText = 'position:absolute;inset:0;z-index:' + el.style.zIndex + ';' + u.css;\n"
+                js_code += "  }\n"
+                js_code += "}"
                 await page.evaluate(js_code, style_updates)
 
             # ── Aplicar stagger (per-span) updates via JS ──
             if stagger_updates:
-                js_stagger = "const staggers = arguments[0];\n"
-                js_stagger += "for (const s of staggers) {\n"
-                js_stagger += "  const spans = document.querySelectorAll('#layer-' + s.idx + ' ' + s.selector);\n"
-                js_stagger += "  for (let i = 0; i < spans.length && i < s.span_css.length; i++) {\n"
-                js_stagger += "    spans[i].style.cssText += s.span_css[i];\n"
+                js_stagger = "(staggers) => {\n"
+                js_stagger += "  for (const s of staggers) {\n"
+                js_stagger += "    const spans = document.querySelectorAll('#layer-' + s.idx + ' ' + s.selector);\n"
+                js_stagger += "    for (let i = 0; i < spans.length && i < s.span_css.length; i++) {\n"
+                js_stagger += "      spans[i].style.cssText += s.span_css[i];\n"
+                js_stagger += "    }\n"
                 js_stagger += "  }\n"
-                js_stagger += "}\n"
+                js_stagger += "}"
                 await page.evaluate(js_stagger, stagger_updates)
 
             # Screenshot
