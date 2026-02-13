@@ -310,12 +310,29 @@ async def render_animated_layer(
         }
     """
     effect = animation.get("effect", "fade_in")
+    anim_type = animation.get("type", "entrance")
     duration_ms = animation.get("duration_ms", 500)
     delay_ms = animation.get("delay_ms", 0)
     easing = animation.get("easing", "ease-out")
 
+    # ── Loop animations (pulse, float, spin, wiggle): cap a 1 ciclo curto ──
+    # O MoviePy/v-editor faz freeze/repeat automaticamente após o ciclo.
+    # Sem cap, pulse de 4000ms = 120 frames = ~25s de render por layer.
+    LOOP_EFFECTS = {"pulse", "float", "spin", "wiggle"}
+    MAX_LOOP_FRAMES = 30  # 1s @ 30fps — suficiente para 1 ciclo
+    is_loop = anim_type == "loop" or effect in LOOP_EFFECTS
+
     delay_frames = int((delay_ms / 1000) * fps)
     anim_frames = max(1, int((duration_ms / 1000) * fps))
+
+    if is_loop and anim_frames > MAX_LOOP_FRAMES:
+        logger.info(
+            f"   ⚡ Loop cap: {effect} {anim_frames}f → {MAX_LOOP_FRAMES}f "
+            f"(MoviePy fará loop/freeze)"
+        )
+        anim_frames = MAX_LOOP_FRAMES
+        delay_frames = 0  # loops não precisam de delay
+
     # Hold final state for a few frames to allow smooth composition
     hold_frames = 2
     total_frames = delay_frames + anim_frames + hold_frames
@@ -324,6 +341,7 @@ async def render_animated_layer(
         f"🎬 Renderizando animação: effect={effect} "
         f"delay={delay_frames}f + anim={anim_frames}f + hold={hold_frames}f "
         f"= {total_frames}f total ({fps}fps)"
+        f"{' [LOOP]' if is_loop else ''}"
     )
 
     browser = await _get_browser()
