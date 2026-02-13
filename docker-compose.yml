@@ -23,6 +23,7 @@ services:
       - V_API_URL=${V_API_URL:-http://v-api:8000}
     volumes:
       - ./app:/app/app:ro  # Read-only mount para hot-reload em dev
+      - shared-data:/app/shared  # Volume compartilhado com v-services e v-editor-python
     networks:
       - vinicius-ai-network
     restart: unless-stopped
@@ -37,6 +38,11 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  shared-data:
+    external: true
+    name: vinicius-ai-shared
 
 networks:
   vinicius-ai-network:
