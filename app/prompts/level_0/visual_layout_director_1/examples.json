@@ -158,7 +158,7 @@
                 "id": "quote_mark",
                 "type": "shape",
                 "description": "Large decorative quote mark",
-                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;top:80px;left:24px;font-size:120px;font-family:Georgia,serif;color:rgba(16,185,129,0.15);line-height:0.8;\">"</div></div>",
+                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;top:80px;left:24px;font-size:120px;font-family:Georgia,serif;color:rgba(16,185,129,0.15);line-height:0.8;\">\u201c</div></div>",
                 "z_index": 150,
                 "is_static": false,
                 "animation": {"type": "entrance", "effect": "scale_up", "duration_ms": 400, "delay_ms": 0, "easing": "ease-out-back"}
