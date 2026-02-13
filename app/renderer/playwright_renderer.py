@@ -480,9 +480,10 @@ async def render_scene_layers(
         is_static = layer.get("is_static", True)
 
         if layer_type == "stroke_reveal":
-            # Renderizar stroke com masks
+            # Renderizar stroke com masks (salva no disco se out_dir disponível)
             stroke_result = await _render_stroke_reveal(
-                layer, canvas_width, canvas_height, google_fonts, fps=fps
+                layer, canvas_width, canvas_height, google_fonts,
+                fps=fps, output_dir=out_dir,
             )
             stroke_reveals.append(stroke_result)
             continue
@@ -571,11 +572,13 @@ async def _render_stroke_reveal(
     canvas_height: int,
     google_fonts: Optional[List[str]] = None,
     fps: int = 30,
+    output_dir: Optional[Path] = None,
 ) -> Dict:
     """
     Renderiza stroke reveal como PNG HQ + sequência de luma masks.
 
     Usa abordagem path-following (PoC #3, approach C).
+    Se output_dir fornecido, salva HQ + masks em disco (mesmo padrão de layers normais).
     """
     layer_id = layer.get("id", "stroke")
     svg_path = layer.get("svg_path", "")
@@ -627,6 +630,16 @@ async def _render_stroke_reveal(
 
     # 2) Generate luma masks (path-following approach)
     masks = []
+    mask_frames_dir = None
+
+    # Preparar diretório de saída se disponível
+    if output_dir:
+        mask_frames_dir = output_dir / f"{layer_id}_masks"
+        mask_frames_dir.mkdir(parents=True, exist_ok=True)
+        # Salvar HQ PNG em disco
+        hq_path = output_dir / f"{layer_id}_hq.png"
+        hq_path.write_bytes(hq_bytes)
+
     page = await browser.new_page(viewport={"width": canvas_width, "height": canvas_height})
     try:
         for frame in range(total_frames):
@@ -646,24 +659,41 @@ async def _render_stroke_reveal(
                 clip={"x": 0, "y": 0, "width": canvas_width, "height": canvas_height},
             )
 
-            masks.append({
-                "frame": frame,
-                "png_base64": base64.b64encode(mask_bytes).decode(),
-            })
+            if mask_frames_dir:
+                # Salvar mask em disco
+                mask_path = mask_frames_dir / f"mask_{frame:04d}.png"
+                mask_path.write_bytes(mask_bytes)
+                masks.append({
+                    "frame": frame,
+                    "png_path": str(mask_path),
+                })
+            else:
+                masks.append({
+                    "frame": frame,
+                    "png_base64": base64.b64encode(mask_bytes).decode(),
+                })
     finally:
         await page.close()
 
-    logger.info(f"   ✅ {layer_id}: 1 HQ + {len(masks)} masks")
+    logger.info(f"   ✅ {layer_id}: 1 HQ + {len(masks)} masks"
+                f"{' (saved to disk)' if output_dir else ''}")
 
-    return {
+    result = {
         "id": layer_id,
         "type": "stroke_reveal",
-        "hq_png_base64": base64.b64encode(hq_bytes).decode(),
         "masks": masks,
         "reveal": reveal_config,
         "total_frames": total_frames,
         "fps": fps,
     }
+
+    if output_dir:
+        result["hq_png_path"] = str(hq_path)
+        result["masks_dir"] = str(mask_frames_dir)
+    else:
+        result["hq_png_base64"] = base64.b64encode(hq_bytes).decode()
+
+    return result
 
 
 def _generate_path_mask_html(
