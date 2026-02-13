@@ -358,13 +358,16 @@ class VisualLayoutDirector1:
 
 Generate the visual layout following ALL rules:
 1. **Generate ALL scenes** — One scene object for EACH scene_description. Do NOT skip any.
-2. **Minimum 4 layers per scene** — background + title + decorative shape/glow + subtitle or CTA.
-3. **Rich backgrounds** — Use multi-stop gradients, never plain solid colors.
-4. **Add decorative layers** — Glow orbs, geometric shapes, subtle patterns for atmosphere and depth.
-5. **Animate most layers** — At least 60% should be `is_static: false`. Use staggered delays.
-6. **Use ambient motion** — Add `loop` animations (pulse, float) to shapes/glows for life.
-7. **Use text from the script** — Title/subtitle text comes from scene_descriptions, not invented.
-8. Return valid JSON matching the output schema.
+2. **Minimum 6 layers per scene** — background + 2-3 shapes/particles + title (word-by-word) + subtitle + decoration/CTA.
+3. **Rich backgrounds** — Multi-stop gradients (3+ stops) with radial gradient mesh overlays. NEVER flat solid colors.
+4. **EVERY title MUST use word-by-word animation** — Wrap each word in `<span data-w="N" style="display:inline-block;">` and use `word_stagger_up`, `word_stagger_fade`, or `word_stagger_scale` with `stagger_ms: 100-200`.
+5. **Short labels/brand names: use letter-by-letter** — Wrap each letter in `<span data-l="N" style="display:inline-block;">` and use `letter_stagger_up` or `letter_stagger_fade` with `stagger_ms: 30-80`.
+6. **Add decorative layers generously** — Glow orbs (pulse), geometric rings (spin), floating particles (float), corner brackets (fade_in), divider lines, diagonal accent lines. Fill the FULL canvas.
+7. **Animate 70%+ of layers** — At least 70% should be `is_static: false`. Use staggered delays.
+8. **Use ambient motion** — Add `loop` animations (pulse, float, spin) to shapes/glows for life.
+9. **Use text from the script** — Title/subtitle text comes from scene_descriptions, not invented.
+10. **Every scene equally rich** — Scene 5 should have the same visual density as Scene 1. No lazy scenes.
+11. Return valid JSON matching the output schema.
 """
 
         return message

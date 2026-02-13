@@ -490,7 +490,9 @@ async def api_render_full_pipeline(request: Dict):
         canvas = request.get("canvas", {"width": 720, "height": 1280})
         output_dir = request.get("output_dir")
         render_animations = request.get("render_animations", False)
+        render_mode = request.get("render_mode", "layered")  # "layered" | "flat"
         fps = request.get("fps", 30)
+        scene_timings = request.get("scene_timings", [])  # [{start_ms, end_ms}] para flat mode
 
         # 1) Gerar layout via LLM
         context_builder = get_context_builder()
@@ -515,24 +517,56 @@ async def api_render_full_pipeline(request: Dict):
         google_fonts = llm_result["result"].get("google_fonts_needed", [])
 
         rendered_scenes = []
-        for scene in scenes:
-            scene_out_dir = None
-            if output_dir:
-                scene_out_dir = str(Path(output_dir) / scene.get("scene_id", "scene"))
 
-            rendered = await render_scene_layers(
-                scene=scene,
-                canvas_width=canvas.get("width", 720),
-                canvas_height=canvas.get("height", 1280),
-                google_fonts=google_fonts,
-                output_dir=scene_out_dir,
-                render_animations=render_animations,
-                fps=fps,
-            )
-            rendered_scenes.append(rendered)
+        if render_mode == "flat":
+            # ── FLAT MODE: composição completa no Playwright ──
+            from app.renderer.playwright_renderer import render_scene_flat
+
+            logger.info(f"🎬 [FLAT MODE] Renderizando {len(scenes)} cenas compostas no Playwright")
+
+            for i, scene in enumerate(scenes):
+                # Duração da cena via timings ou fallback do LLM
+                if i < len(scene_timings):
+                    t = scene_timings[i]
+                    dur_s = (t.get("end_ms", 0) - t.get("start_ms", 0)) / 1000.0
+                else:
+                    dur_s = scene.get("duration_s", 4.0)
+
+                scene_out_dir = None
+                if output_dir:
+                    scene_out_dir = str(Path(output_dir) / scene.get("scene_id", f"scene_{i:02d}"))
+
+                rendered = await render_scene_flat(
+                    scene=scene,
+                    canvas_width=canvas.get("width", 1080),
+                    canvas_height=canvas.get("height", 1920),
+                    scene_duration_s=dur_s,
+                    google_fonts=google_fonts,
+                    output_dir=scene_out_dir,
+                    fps=fps,
+                )
+                rendered_scenes.append(rendered)
+        else:
+            # ── LAYERED MODE: cada layer separada (padrão) ──
+            for scene in scenes:
+                scene_out_dir = None
+                if output_dir:
+                    scene_out_dir = str(Path(output_dir) / scene.get("scene_id", "scene"))
+
+                rendered = await render_scene_layers(
+                    scene=scene,
+                    canvas_width=canvas.get("width", 720),
+                    canvas_height=canvas.get("height", 1280),
+                    google_fonts=google_fonts,
+                    output_dir=scene_out_dir,
+                    render_animations=render_animations,
+                    fps=fps,
+                )
+                rendered_scenes.append(rendered)
 
         return {
             "status": "success",
+            "render_mode": render_mode,
             "llm_result": llm_result["result"],
             "rendered_scenes": rendered_scenes,
             "llm_usage": llm_result.get("llm_usage"),

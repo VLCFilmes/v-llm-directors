@@ -580,6 +580,285 @@ async def render_scene_layers(
 
 
 # ═══════════════════════════════════════════════════════════
+# FLAT RENDER — composição completa no Playwright (1 frame = 1 screenshot)
+# ═══════════════════════════════════════════════════════════
+
+async def render_scene_flat(
+    scene: Dict,
+    canvas_width: int = 1080,
+    canvas_height: int = 1920,
+    scene_duration_s: float = 4.0,
+    google_fonts: Optional[List[str]] = None,
+    output_dir: Optional[str] = None,
+    fps: int = 30,
+) -> Dict:
+    """
+    Renderiza uma cena COMPLETA no Playwright (todas as layers compostas).
+    
+    Ao invés de renderizar cada layer separada, monta um único HTML com
+    todas as layers visíveis e captura frame-a-frame aplicando as animações
+    via Python (mesma lógica de _get_frame_css + _ease).
+    
+    Resultado: PNG sequence pronta para concatenar no v-editor (sem recomposição).
+    Vantagem: qualidade nativa do Chromium (anti-aliasing, gradientes perfeitos).
+    """
+    scene_id = scene.get("scene_id", "scene_unknown")
+    layers = scene.get("layers", [])
+    total_frames = max(1, int(scene_duration_s * fps))
+
+    logger.info(
+        f"🎬 [FLAT] Renderizando cena {scene_id}: {len(layers)} layers, "
+        f"{total_frames} frames ({scene_duration_s:.2f}s @ {fps}fps)"
+    )
+
+    out_dir = Path(output_dir) if output_dir else None
+    if out_dir:
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+    # ── Preparar font imports ──
+    fonts_import = ""
+    if google_fonts:
+        fonts_import = (
+            f'<link href="https://fonts.googleapis.com/css2?'
+            f'{"&".join("family=" + f.replace(" ", "+") for f in google_fonts)}'
+            f'&display=swap" rel="stylesheet">'
+        )
+
+    # ── Preparar dados de animação por layer ──
+    layer_anims = []
+    for layer in layers:
+        layer_type = layer.get("type", "unknown")
+        # Pular stroke_reveal no flat mode (por enquanto)
+        if layer_type == "stroke_reveal":
+            continue
+
+        html = layer.get("html", "")
+        if not html:
+            continue
+
+        animation = layer.get("animation") or {}
+        effect = animation.get("effect", "fade_in")
+        anim_type = animation.get("type", "entrance")
+        duration_ms = animation.get("duration_ms", 500)
+        delay_ms = animation.get("delay_ms", 0)
+        easing = animation.get("easing", "ease-out")
+        is_static = layer.get("is_static", True)
+        z_index = layer.get("z_index", 100)
+
+        stagger_ms = animation.get("stagger_ms", 0)
+
+        layer_anims.append({
+            "id": layer.get("id", "unknown"),
+            "html": html,
+            "z_index": z_index,
+            "is_static": is_static,
+            "effect": effect,
+            "anim_type": anim_type,
+            "duration_ms": duration_ms,
+            "delay_ms": delay_ms,
+            "stagger_ms": stagger_ms,
+            "easing": easing,
+        })
+
+    # Ordenar por z_index
+    layer_anims.sort(key=lambda l: l["z_index"])
+
+    # ── Renderizar frame a frame (otimizado: 1 page load + JS updates) ──
+    browser = await _get_browser()
+    page = await browser.new_page(viewport={"width": canvas_width, "height": canvas_height})
+
+    frames_saved = []
+
+    try:
+        # 1) Montar HTML inicial com todas as layers (estado frame 0)
+        layers_html_parts = []
+        for idx, la in enumerate(layer_anims):
+            # Cada layer recebe um data-idx para atualização via JS
+            layer_div = (
+                f'<div id="layer-{idx}" data-idx="{idx}" '
+                f'style="position:absolute;inset:0;z-index:{la["z_index"]};">'
+                f'{la["html"]}'
+                f'</div>'
+            )
+            layers_html_parts.append(layer_div)
+
+        initial_html = f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+{fonts_import}
+<style>
+* {{ margin:0; padding:0; }}
+body {{ width:{canvas_width}px; height:{canvas_height}px; background:#000; overflow:hidden; }}
+</style>
+</head><body>
+<div id="canvas" style="width:{canvas_width}px;height:{canvas_height}px;position:relative;overflow:hidden;">
+{"".join(layers_html_parts)}
+</div>
+</body></html>"""
+
+        # Carregar HTML e esperar fontes
+        await page.set_content(initial_html, wait_until="networkidle")
+        # Aguardar fontes carregarem
+        try:
+            await page.evaluate("() => document.fonts.ready")
+        except Exception:
+            pass  # Timeout ok — fontes podem não estar presentes
+
+        # Identificar quais layers são stagger (para contagem de spans no 1º frame)
+        STAGGER_EFFECTS = {
+            "word_stagger_up", "word_stagger_fade", "word_stagger_scale",
+            "letter_stagger_up", "letter_stagger_fade", "letter_stagger_scale",
+        }
+        stagger_layers = {}  # idx → span_count (preenchido no 1º frame)
+
+        # 2) Frame loop: atualizar estilos via JS (muito mais rápido que set_content)
+        for frame_idx in range(total_frames):
+            current_time_ms = (frame_idx / fps) * 1000
+
+            # ── No 1º frame: contar spans de stagger layers ──
+            if frame_idx == 0:
+                for idx, la in enumerate(layer_anims):
+                    if la["effect"] in STAGGER_EFFECTS:
+                        selector = "[data-w]" if "word_stagger" in la["effect"] else "[data-l]"
+                        count = await page.evaluate(
+                            f"document.querySelectorAll('#layer-{idx} {selector}').length"
+                        )
+                        stagger_layers[idx] = count
+                        logger.info(
+                            f"   🔤 [FLAT] Layer {la['id']}: {count} stagger spans "
+                            f"({la['effect']}, stagger_ms={la['stagger_ms']})"
+                        )
+
+            # Calcular estilos de cada layer para este frame
+            style_updates = []       # layer-level CSS updates
+            stagger_updates = []     # per-span CSS updates
+
+            for idx, la in enumerate(layer_anims):
+                if la["is_static"]:
+                    continue
+
+                delay_ms = la["delay_ms"]
+                duration_ms = la["duration_ms"]
+                effect = la["effect"]
+                easing = la["easing"]
+                anim_type = la["anim_type"]
+
+                # ── Stagger animations (word/letter) ──
+                if effect in STAGGER_EFFECTS and idx in stagger_layers:
+                    base_effect = effect.replace("word_stagger_", "").replace("letter_stagger_", "")
+                    # Map stagger sub-effect → standard effect
+                    effect_map = {
+                        "up": "slide_up", "fade": "fade_in", "scale": "scale_up",
+                    }
+                    std_effect = effect_map.get(base_effect, "fade_in")
+                    stagger_ms = la.get("stagger_ms", 100)
+                    span_count = stagger_layers[idx]
+                    selector = "[data-w]" if "word_stagger" in effect else "[data-l]"
+
+                    span_css_list = []
+                    all_before_delay = True
+                    for si in range(span_count):
+                        span_delay = delay_ms + si * stagger_ms
+                        time_since = current_time_ms - span_delay
+
+                        if time_since < 0:
+                            css_s = "opacity:0;transform:translateY(30px);" if std_effect == "slide_up" else "opacity:0;"
+                            all_before_delay = all_before_delay and True
+                        elif time_since >= duration_ms:
+                            css_s = _get_frame_css(std_effect, 1.0)
+                            all_before_delay = False
+                        else:
+                            prog = time_since / max(duration_ms, 1)
+                            css_s = _get_frame_css(std_effect, _ease(prog, easing))
+                            all_before_delay = False
+
+                        span_css_list.append(css_s)
+
+                    # Se todos antes do delay, esconder a layer inteira (mais eficiente)
+                    if all_before_delay:
+                        style_updates.append({"idx": idx, "css": "opacity:0;"})
+                    else:
+                        # Mostrar layer, aplicar CSS individual a cada span
+                        style_updates.append({"idx": idx, "css": ""})
+                        stagger_updates.append({
+                            "idx": idx,
+                            "selector": selector,
+                            "span_css": span_css_list,
+                        })
+                    continue
+
+                # ── Standard animations ──
+                time_since_start = current_time_ms - delay_ms
+
+                if time_since_start < 0:
+                    css_str = "opacity:0;" if anim_type == "entrance" else ""
+                elif time_since_start >= duration_ms:
+                    if anim_type == "loop":
+                        cycle_pos = (time_since_start % duration_ms) / max(duration_ms, 1)
+                        css_str = _get_frame_css(effect, _ease(cycle_pos, easing))
+                    else:
+                        css_str = _get_frame_css(effect, 1.0)
+                else:
+                    progress = time_since_start / max(duration_ms, 1)
+                    css_str = _get_frame_css(effect, _ease(progress, easing))
+
+                style_updates.append({"idx": idx, "css": css_str})
+
+            # ── Aplicar layer-level updates via JS ──
+            if style_updates:
+                js_code = "const updates = arguments[0];\n"
+                js_code += "for (const u of updates) {\n"
+                js_code += "  const el = document.getElementById('layer-' + u.idx);\n"
+                js_code += "  if (el) el.style.cssText = 'position:absolute;inset:0;z-index:' + el.style.zIndex + ';' + u.css;\n"
+                js_code += "}\n"
+                await page.evaluate(js_code, style_updates)
+
+            # ── Aplicar stagger (per-span) updates via JS ──
+            if stagger_updates:
+                js_stagger = "const staggers = arguments[0];\n"
+                js_stagger += "for (const s of staggers) {\n"
+                js_stagger += "  const spans = document.querySelectorAll('#layer-' + s.idx + ' ' + s.selector);\n"
+                js_stagger += "  for (let i = 0; i < spans.length && i < s.span_css.length; i++) {\n"
+                js_stagger += "    spans[i].style.cssText += s.span_css[i];\n"
+                js_stagger += "  }\n"
+                js_stagger += "}\n"
+                await page.evaluate(js_stagger, stagger_updates)
+
+            # Screenshot
+            png_bytes = await page.screenshot(
+                type="png",
+                clip={"x": 0, "y": 0, "width": canvas_width, "height": canvas_height},
+            )
+
+            if out_dir:
+                frame_path = out_dir / f"frame_{frame_idx:04d}.png"
+                frame_path.write_bytes(png_bytes)
+                frames_saved.append(str(frame_path))
+
+            # Log progresso a cada 25%
+            if frame_idx > 0 and frame_idx % max(1, total_frames // 4) == 0:
+                pct = int(frame_idx / total_frames * 100)
+                logger.info(f"   📸 [FLAT] {scene_id}: {pct}% ({frame_idx}/{total_frames})")
+
+    finally:
+        await page.close()
+
+    logger.info(
+        f"   ✅ [FLAT] {scene_id}: {total_frames} frames renderizados "
+        f"({scene_duration_s:.2f}s @ {fps}fps)"
+    )
+
+    return {
+        "scene_id": scene_id,
+        "render_mode": "flat",
+        "total_frames": total_frames,
+        "fps": fps,
+        "duration_s": scene_duration_s,
+        "frames_dir": str(out_dir) if out_dir else None,
+        "frames": frames_saved if out_dir else [],
+    }
+
+
+# ═══════════════════════════════════════════════════════════
 # STROKE REVEAL (ANIMATED MASK SEQUENCE)
 # ═══════════════════════════════════════════════════════════
 
