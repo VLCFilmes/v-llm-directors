@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional
+from pathlib import Path
 import logging
 import os
 from dotenv import load_dotenv
