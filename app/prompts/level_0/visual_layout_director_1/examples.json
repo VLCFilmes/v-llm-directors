@@ -1,0 +1,192 @@
+{
+  "examples": [
+    {
+      "name": "Hero scene — Sports brand",
+      "user_prompt": "Create a hero opening scene for a sports shoe brand called VELOCITY. Dark, neon style with cyan and purple accents.",
+      "canvas": {"width": 720, "height": 1280},
+      "expected_output": {
+        "scenes": [
+          {
+            "scene_id": "scene_01",
+            "scene_description": "Hero opening with neon title and shoe silhouette",
+            "start_time_s": 0.0,
+            "duration_s": 5.0,
+            "layers": [
+              {
+                "id": "bg_gradient",
+                "type": "background",
+                "description": "Dark gradient with purple tones",
+                "html": "<div style=\"width:720px;height:1280px;background:linear-gradient(160deg,#0a0a2e 0%,#1a0a3e 40%,#2d0a4e 70%,#0a0a2e 100%);\"></div>",
+                "z_index": 100,
+                "is_static": true
+              },
+              {
+                "id": "glow_orb",
+                "type": "shape",
+                "description": "Cyan glow orb in center",
+                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,255,0.18) 0%,transparent 70%);top:30%;left:50%;transform:translate(-50%,-50%);\"></div></div>",
+                "z_index": 150,
+                "is_static": true
+              },
+              {
+                "id": "brand_logo",
+                "type": "subtitle",
+                "description": "VELOCITY brand name, subtle",
+                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;top:100px;left:0;right:0;text-align:center;font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;letter-spacing:16px;color:rgba(255,255,255,0.35);\">VELOCITY</div></div>",
+                "z_index": 300,
+                "is_static": false,
+                "animation": {
+                  "type": "entrance",
+                  "effect": "fade_in",
+                  "duration_ms": 800,
+                  "delay_ms": 0,
+                  "easing": "ease-out"
+                }
+              },
+              {
+                "id": "title_main",
+                "type": "title",
+                "description": "RUN BEYOND LIMITS with gradient neon text",
+                "html": "<div style=\"width:720px;height:1280px;display:flex;align-items:center;justify-content:center;\"><div style=\"text-align:center;padding:0 40px;\"><div style=\"font-family:'Space Grotesk',sans-serif;font-size:96px;font-weight:900;line-height:0.92;letter-spacing:-4px;background:linear-gradient(135deg,#ffffff 0%,#00e5ff 50%,#7c3aed 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;\">RUN<br>BEYOND<br>LIMITS</div><div style=\"font-size:18px;color:rgba(255,255,255,0.45);margin-top:28px;letter-spacing:6px;text-transform:uppercase;\">Collection 2026</div></div></div>",
+                "z_index": 400,
+                "is_static": false,
+                "animation": {
+                  "type": "entrance",
+                  "effect": "scale_up",
+                  "duration_ms": 600,
+                  "delay_ms": 300,
+                  "easing": "ease-out-cubic"
+                }
+              },
+              {
+                "id": "cta_button",
+                "type": "cartela",
+                "description": "CTA button with neon border",
+                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;bottom:60px;left:50%;transform:translateX(-50%);padding:16px 44px;border:2px solid rgba(0,229,255,0.4);border-radius:40px;font-family:'Inter',sans-serif;font-size:15px;letter-spacing:4px;text-transform:uppercase;color:#00e5ff;background:rgba(0,229,255,0.06);\">Descubra Agora</div></div>",
+                "z_index": 500,
+                "is_static": false,
+                "animation": {
+                  "type": "entrance",
+                  "effect": "slide_up",
+                  "duration_ms": 500,
+                  "delay_ms": 800,
+                  "easing": "ease-out"
+                }
+              }
+            ]
+          }
+        ],
+        "google_fonts_needed": ["Space Grotesk:wght@700;900", "Inter:wght@400;600"],
+        "reasoning": "Dark neon aesthetic with gradient text. Layers decomposed for independent animation: bg first, glow static, brand fades in, title scales up with stagger, CTA slides from bottom."
+      }
+    },
+    {
+      "name": "Stats scene — Numbers with icon cards",
+      "user_prompt": "Create a stats/numbers scene showing 4 key metrics: 247g weight, 38% energy return, 60% recycled, 12k+ athletes. Dark background with colored accents.",
+      "canvas": {"width": 720, "height": 1280},
+      "expected_output": {
+        "scenes": [
+          {
+            "scene_id": "scene_stats",
+            "scene_description": "Four stat cards with icons and colored numbers",
+            "start_time_s": 10.0,
+            "duration_s": 5.0,
+            "layers": [
+              {
+                "id": "bg_stats",
+                "type": "background",
+                "description": "Dark navy gradient",
+                "html": "<div style=\"width:720px;height:1280px;background:linear-gradient(180deg,#0a1628 0%,#0d0d1a 100%);\"></div>",
+                "z_index": 100,
+                "is_static": true
+              },
+              {
+                "id": "header_text",
+                "type": "title",
+                "description": "Section header 'Números que falam por si'",
+                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;top:50px;left:24px;\"><div style=\"font-size:11px;color:#00e5ff;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;font-family:'Inter',sans-serif;\">Performance</div><div style=\"font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:900;color:white;line-height:1.15;\">Números que<br>falam por si</div></div></div>",
+                "z_index": 300,
+                "is_static": false,
+                "animation": {"type": "entrance", "effect": "fade_in", "duration_ms": 600, "delay_ms": 0, "easing": "ease-out"}
+              },
+              {
+                "id": "stat_card_1",
+                "type": "cartela",
+                "description": "247g stat card",
+                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;top:180px;left:24px;right:24px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;\"><div style=\"width:48px;height:48px;border-radius:12px;background:rgba(0,229,255,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;\">⚡</div><div><div style=\"font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:900;color:#00e5ff;\">247g</div><div style=\"font-size:12px;color:rgba(255,255,255,0.5);font-family:'Inter',sans-serif;\">Peso ultra-leve por pé</div></div></div></div>",
+                "z_index": 400,
+                "is_static": false,
+                "animation": {"type": "entrance", "effect": "slide_left", "duration_ms": 500, "delay_ms": 200, "easing": "ease-out-cubic"}
+              },
+              {
+                "id": "stat_card_2",
+                "type": "cartela",
+                "description": "38% stat card",
+                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;top:290px;left:24px;right:24px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;\"><div style=\"width:48px;height:48px;border-radius:12px;background:rgba(124,58,237,0.1);display:flex;align-items:center;justify-content:center;font-size:22px;\">🔬</div><div><div style=\"font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:900;color:#7c3aed;\">38%</div><div style=\"font-size:12px;color:rgba(255,255,255,0.5);font-family:'Inter',sans-serif;\">Mais retorno de energia</div></div></div></div>",
+                "z_index": 400,
+                "is_static": false,
+                "animation": {"type": "entrance", "effect": "slide_left", "duration_ms": 500, "delay_ms": 400, "easing": "ease-out-cubic"}
+              }
+            ]
+          }
+        ],
+        "google_fonts_needed": ["Space Grotesk:wght@700;900", "Inter:wght@400"],
+        "reasoning": "Stacked stat cards with staggered slide-in animation. Each card has colored icon + bold number + description. Cards enter from left with increasing delay for cascade effect."
+      }
+    },
+    {
+      "name": "Testimonial scene with quote",
+      "user_prompt": "Create a testimonial scene with a 5-star review, a quote about running shoes, and author info. Elegant dark style with green accent.",
+      "canvas": {"width": 720, "height": 1280},
+      "expected_output": {
+        "scenes": [
+          {
+            "scene_id": "scene_testimonial",
+            "scene_description": "Customer testimonial with stars, quote, and avatar",
+            "start_time_s": 20.0,
+            "duration_s": 5.0,
+            "layers": [
+              {
+                "id": "bg_dark",
+                "type": "background",
+                "description": "Dark gradient with diagonal line pattern",
+                "html": "<div style=\"width:720px;height:1280px;background:linear-gradient(180deg,#1a1a1a 0%,#0d0d0d 100%);\"></div>",
+                "z_index": 100,
+                "is_static": true
+              },
+              {
+                "id": "quote_mark",
+                "type": "shape",
+                "description": "Large decorative quote mark",
+                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;top:80px;left:24px;font-size:120px;font-family:Georgia,serif;color:rgba(16,185,129,0.15);line-height:0.8;\">"</div></div>",
+                "z_index": 150,
+                "is_static": false,
+                "animation": {"type": "entrance", "effect": "scale_up", "duration_ms": 400, "delay_ms": 0, "easing": "ease-out-back"}
+              },
+              {
+                "id": "stars_rating",
+                "type": "icon",
+                "description": "5 gold stars",
+                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;top:100px;left:24px;display:flex;gap:4px;font-size:18px;color:#fbbf24;\">★ ★ ★ ★ ★</div></div>",
+                "z_index": 200,
+                "is_static": false,
+                "animation": {"type": "entrance", "effect": "fade_in", "duration_ms": 500, "delay_ms": 200, "easing": "ease-out"}
+              },
+              {
+                "id": "quote_text",
+                "type": "title",
+                "description": "Testimonial quote text",
+                "html": "<div style=\"width:720px;height:1280px;position:relative;\"><div style=\"position:absolute;top:160px;left:24px;right:24px;font-family:'Inter',sans-serif;font-size:22px;font-weight:300;line-height:1.5;color:rgba(255,255,255,0.9);\">\"Depois que comecei a correr com o Air Surge, meu tempo na meia maratona <strong style='color:#10b981;font-weight:600;'>caiu 8 minutos</strong>. É o tênis mais leve e responsivo que já usei.\"</div></div>",
+                "z_index": 300,
+                "is_static": false,
+                "animation": {"type": "entrance", "effect": "fade_in", "duration_ms": 800, "delay_ms": 400, "easing": "ease-out"}
+              }
+            ]
+          }
+        ],
+        "google_fonts_needed": ["Inter:wght@300;400;600"],
+        "reasoning": "Elegant testimonial with large decorative quote mark as visual anchor. Stars add credibility, quote has green highlight on key metric. Staggered entrance: quote mark → stars → text → author."
+      }
+    }
+  ]
+}

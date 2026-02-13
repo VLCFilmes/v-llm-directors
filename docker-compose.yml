@@ -7,11 +7,18 @@ services:
     ports:
       - "5025:5025"
     environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}
+      # OpenAI (Director v0 + Director v1)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-3.5-turbo}
+      - OPENAI_MODEL_VISUAL=${OPENAI_MODEL_VISUAL:-gpt-4o}
+      # Anthropic (futuro — Claude Sonnet para Director v1)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-}
+      # Server
       - HOST=0.0.0.0
       - PORT=5025
       - DEBUG=${DEBUG:-false}
+      # Integration
       - V_SERVICES_URL=${V_SERVICES_URL:-http://v-services:5000}
       - V_API_URL=${V_API_URL:-http://v-api:8000}
     volumes:

@@ -223,6 +223,79 @@ class ContextBuilder:
         
         return areas
     
+    # ═══════════════════════════════════════════════════════════
+    # CONTEXTO PARA VISUAL LAYOUT DIRECTOR (v1)
+    # ═══════════════════════════════════════════════════════════
+
+    def build_visual_layout_context(self, raw_context: Dict) -> Dict:
+        """
+        Constrói contexto otimizado para VisualLayoutDirector1.
+
+        Args:
+            raw_context: {
+                "canvas": {width, height},
+                "template_style": {colors, fonts, mood},
+                "script_text": str,
+                "scene_descriptions": [{scene_id, text, visual_hint, start_time, duration}],
+                "timestamps": [{text, start, end}],
+                "occupied_areas": [{x, y, width, height}],  # subtitle positions
+                "user_prompt": str,
+                "reference_image_url": str (optional),
+                "component_library": [...] (optional)
+            }
+
+        Returns:
+            Contexto estruturado para o Director v1
+        """
+        logger.info("🔧 Construindo contexto para VisualLayoutDirector1...")
+
+        canvas = raw_context.get("canvas", {"width": 720, "height": 1280})
+        template_style = raw_context.get("template_style", {})
+        script_text = raw_context.get("script_text", "")
+        scene_descriptions = raw_context.get("scene_descriptions", [])
+        timestamps = raw_context.get("timestamps", [])
+        occupied_areas = raw_context.get("occupied_areas", [])
+        component_library = raw_context.get("component_library", [])
+
+        # Defaults para template_style
+        if not template_style.get("colors"):
+            template_style["colors"] = {
+                "primary": "#00e5ff",
+                "secondary": "#7c3aed",
+                "accent": "#ff6b35",
+                "background": "#0a0a2e",
+                "text": "#ffffff",
+            }
+        if not template_style.get("fonts"):
+            template_style["fonts"] = {
+                "title": "Space Grotesk",
+                "body": "Inter",
+            }
+        if not template_style.get("mood"):
+            template_style["mood"] = "modern, clean, professional"
+
+        context = {
+            "canvas": canvas,
+            "template_style": template_style,
+            "script_text": script_text,
+            "scene_descriptions": scene_descriptions,
+            "timestamps": timestamps,
+            "occupied_areas": occupied_areas,
+            "component_library": component_library,
+        }
+
+        logger.info(f"✅ Contexto visual construído:")
+        logger.info(f"   - Canvas: {canvas['width']}x{canvas['height']}")
+        logger.info(f"   - Scenes: {len(scene_descriptions)}")
+        logger.info(f"   - Timestamps: {len(timestamps)}")
+        logger.info(f"   - Style: {template_style.get('mood', 'N/A')}")
+
+        return context
+
+    # ═══════════════════════════════════════════════════════════
+    # HELPERS
+    # ═══════════════════════════════════════════════════════════
+
     def _calculate_safe_zones(
         self,
         text_layout: List[Dict],
