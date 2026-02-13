@@ -194,6 +194,227 @@ async def render_layer_to_png(
 
 
 # ═══════════════════════════════════════════════════════════
+# EASING FUNCTIONS
+# ═══════════════════════════════════════════════════════════
+
+def _ease(t: float, easing: str = "ease-out") -> float:
+    """Calcula valor eased para progresso t (0..1)."""
+    t = max(0.0, min(1.0, t))
+    if easing == "linear":
+        return t
+    elif easing == "ease-in":
+        return t * t
+    elif easing == "ease-out":
+        return 1 - (1 - t) ** 2
+    elif easing == "ease-in-out":
+        return 3 * t * t - 2 * t * t * t
+    elif easing == "ease-out-cubic":
+        return 1 - (1 - t) ** 3
+    elif easing == "ease-out-back":
+        c1 = 1.70158
+        c3 = c1 + 1
+        return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2
+    else:
+        return 1 - (1 - t) ** 2  # default ease-out
+
+
+def _get_frame_css(effect: str, progress: float) -> str:
+    """Retorna CSS transform+opacity para um frame de animação."""
+    p = progress  # 0..1 (já eased)
+
+    if effect == "fade_in":
+        return f"opacity:{p:.3f};"
+
+    elif effect == "scale_up":
+        s = 0.3 + 0.7 * p
+        return f"transform:scale({s:.3f});opacity:{p:.3f};transform-origin:center center;"
+
+    elif effect == "scale_down":
+        s = 1.5 - 0.5 * p
+        return f"transform:scale({s:.3f});opacity:{p:.3f};transform-origin:center center;"
+
+    elif effect == "slide_up":
+        y = 120 * (1 - p)
+        return f"transform:translateY({y:.1f}px);opacity:{p:.3f};"
+
+    elif effect == "slide_down":
+        y = -120 * (1 - p)
+        return f"transform:translateY({y:.1f}px);opacity:{p:.3f};"
+
+    elif effect == "slide_left":
+        x = 120 * (1 - p)
+        return f"transform:translateX({x:.1f}px);opacity:{p:.3f};"
+
+    elif effect == "slide_right":
+        x = -120 * (1 - p)
+        return f"transform:translateX({x:.1f}px);opacity:{p:.3f};"
+
+    elif effect == "bounce_in":
+        # Scale 0 → 1.15 → 0.95 → 1.0
+        if p < 0.6:
+            s = (p / 0.6) * 1.15
+        elif p < 0.8:
+            s = 1.15 - ((p - 0.6) / 0.2) * 0.20
+        else:
+            s = 0.95 + ((p - 0.8) / 0.2) * 0.05
+        return f"transform:scale({s:.3f});opacity:{min(p * 2, 1.0):.3f};transform-origin:center center;"
+
+    elif effect == "fade_out":
+        return f"opacity:{1.0 - p:.3f};"
+
+    elif effect == "scale_out":
+        s = 1.0 + 0.5 * p
+        return f"transform:scale({s:.3f});opacity:{1.0 - p:.3f};transform-origin:center center;"
+
+    else:
+        # Default: fade_in
+        return f"opacity:{p:.3f};"
+
+
+# ═══════════════════════════════════════════════════════════
+# RENDER ANIMATED LAYER (PNG SEQUENCE)
+# ═══════════════════════════════════════════════════════════
+
+
+async def render_animated_layer(
+    html: str,
+    animation: Dict,
+    canvas_width: int = 720,
+    canvas_height: int = 1280,
+    fps: int = 30,
+    google_fonts: Optional[List[str]] = None,
+) -> Dict:
+    """
+    Renderiza uma layer animada como sequência de PNGs.
+
+    O HTML da layer é envolvido em um container, e para cada frame
+    aplicamos CSS transform/opacity correspondente ao progresso da animação.
+
+    Args:
+        html: HTML inline da layer
+        animation: {effect, duration_ms, delay_ms, easing, type}
+        canvas_width/canvas_height: Dimensões do canvas
+        fps: Frames por segundo
+        google_fonts: Fontes Google
+
+    Returns:
+        {
+            "frames": [{"frame": 0, "png_base64": str}, ...],
+            "total_frames": int,
+            "delay_frames": int,   # frames de espera (transparente) antes da animação
+            "anim_frames": int,    # frames da animação propriamente
+            "hold_frames": int,    # frames parados no estado final
+            "fps": int,
+            "duration_ms": int,
+            "effect": str,
+        }
+    """
+    effect = animation.get("effect", "fade_in")
+    duration_ms = animation.get("duration_ms", 500)
+    delay_ms = animation.get("delay_ms", 0)
+    easing = animation.get("easing", "ease-out")
+
+    delay_frames = int((delay_ms / 1000) * fps)
+    anim_frames = max(1, int((duration_ms / 1000) * fps))
+    # Hold final state for a few frames to allow smooth composition
+    hold_frames = 2
+    total_frames = delay_frames + anim_frames + hold_frames
+
+    logger.info(
+        f"🎬 Renderizando animação: effect={effect} "
+        f"delay={delay_frames}f + anim={anim_frames}f + hold={hold_frames}f "
+        f"= {total_frames}f total ({fps}fps)"
+    )
+
+    browser = await _get_browser()
+    page = await browser.new_page(viewport={"width": canvas_width, "height": canvas_height})
+
+    try:
+        # Construir HTML com container animável
+        fonts_import = ""
+        if google_fonts:
+            fonts_import = (
+                '<link href="https://fonts.googleapis.com/css2?'
+                + "&".join("family=" + f.replace(" ", "+") for f in google_fonts)
+                + '&display=swap" rel="stylesheet">'
+            )
+
+        wrapped_html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+{fonts_import}
+<style>
+  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+  body {{ width: {canvas_width}px; height: {canvas_height}px; overflow: hidden; background: transparent; }}
+  #anim-container {{
+    width: {canvas_width}px;
+    height: {canvas_height}px;
+    position: relative;
+  }}
+</style>
+</head>
+<body>
+<div id="anim-container">
+{html}
+</div>
+</body>
+</html>"""
+
+        await page.set_content(wrapped_html, wait_until="networkidle")
+        if google_fonts:
+            await page.wait_for_timeout(500)
+
+        clip = {"x": 0, "y": 0, "width": canvas_width, "height": canvas_height}
+        frames = []
+
+        for frame_idx in range(total_frames):
+            if frame_idx < delay_frames:
+                # Delay phase: invisible (transparent PNG)
+                css = "opacity:0;"
+            elif frame_idx >= delay_frames + anim_frames:
+                # Hold phase: final state (fully visible)
+                css = _get_frame_css(effect, 1.0)
+            else:
+                # Animation phase
+                t = (frame_idx - delay_frames) / max(anim_frames - 1, 1)
+                eased_t = _ease(t, easing)
+                css = _get_frame_css(effect, eased_t)
+
+            # Apply CSS via JavaScript (fast, no page reload)
+            await page.evaluate(
+                f'document.getElementById("anim-container").style.cssText = "{css}";'
+            )
+
+            png_bytes = await page.screenshot(
+                type="png",
+                omit_background=True,
+                clip=clip,
+            )
+
+            frames.append({
+                "frame": frame_idx,
+                "png_base64": base64.b64encode(png_bytes).decode(),
+            })
+
+        logger.info(f"   ✅ {total_frames} frames renderizados")
+
+        return {
+            "frames": frames,
+            "total_frames": total_frames,
+            "delay_frames": delay_frames,
+            "anim_frames": anim_frames,
+            "hold_frames": hold_frames,
+            "fps": fps,
+            "duration_ms": delay_ms + duration_ms,
+            "effect": effect,
+        }
+
+    finally:
+        await page.close()
+
+
+# ═══════════════════════════════════════════════════════════
 # RENDER SCENE (ALL LAYERS)
 # ═══════════════════════════════════════════════════════════
 
@@ -204,6 +425,8 @@ async def render_scene_layers(
     canvas_height: int = 1280,
     google_fonts: Optional[List[str]] = None,
     output_dir: Optional[str] = None,
+    render_animations: bool = False,
+    fps: int = 30,
 ) -> Dict:
     """
     Renderiza todas as layers de uma cena.
@@ -214,6 +437,8 @@ async def render_scene_layers(
         canvas_height: Altura do canvas
         google_fonts: Fontes Google para carregar
         output_dir: Diretório para salvar PNGs (se None, retorna base64)
+        render_animations: Se True, layers com animation são renderizadas como PNG sequences
+        fps: Frames por segundo para animações
 
     Returns:
         {
@@ -230,21 +455,15 @@ async def render_scene_layers(
                     "z_index": int,
                     "animation": {...} | null,
                     "is_static": bool,
+                    "animation_sequence": {...} | null   # presente se render_animations=True
                 }
             ],
-            "stroke_reveals": [
-                {
-                    "id": str,
-                    "hq_png_base64": str,
-                    "masks": [{"frame": int, "png_base64": str}, ...],
-                    "reveal": {...}
-                }
-            ]
+            "stroke_reveals": [...]
         }
     """
     scene_id = scene.get("scene_id", "scene_unknown")
     layers = scene.get("layers", [])
-    logger.info(f"🎨 Renderizando cena {scene_id}: {len(layers)} layers")
+    logger.info(f"🎨 Renderizando cena {scene_id}: {len(layers)} layers (animations={render_animations})")
 
     out_dir = Path(output_dir) if output_dir else None
     if out_dir:
@@ -257,11 +476,13 @@ async def render_scene_layers(
         layer_id = layer.get("id", "unknown")
         layer_type = layer.get("type", "unknown")
         html = layer.get("html", "")
+        animation = layer.get("animation")
+        is_static = layer.get("is_static", True)
 
         if layer_type == "stroke_reveal":
             # Renderizar stroke com masks
             stroke_result = await _render_stroke_reveal(
-                layer, canvas_width, canvas_height, google_fonts
+                layer, canvas_width, canvas_height, google_fonts, fps=fps
             )
             stroke_reveals.append(stroke_result)
             continue
@@ -270,12 +491,12 @@ async def render_scene_layers(
             logger.warning(f"⚠️ Layer {layer_id} sem HTML, pulando")
             continue
 
-        # Renderizar layer
+        # 1) Sempre renderizar versão estática
         result = await render_layer_to_png(
             html=html,
             canvas_width=canvas_width,
             canvas_height=canvas_height,
-            crop_to_content=False,  # full canvas for compositing
+            crop_to_content=False,
             google_fonts=google_fonts,
         )
 
@@ -284,12 +505,13 @@ async def render_scene_layers(
             "type": layer_type,
             "description": layer.get("description", ""),
             "z_index": layer.get("z_index", 100),
-            "is_static": layer.get("is_static", True),
-            "animation": layer.get("animation"),
+            "is_static": is_static,
+            "animation": animation,
             "width": result["width"],
             "height": result["height"],
             "position": result["position"],
             "anchor_point": result["anchor_point"],
+            "animation_sequence": None,
         }
 
         if out_dir:
@@ -299,6 +521,34 @@ async def render_scene_layers(
             rendered["png_path"] = str(png_path)
         else:
             rendered["png_base64"] = result["png_base64"]
+
+        # 2) Se tem animação E render_animations=True, gerar sequência
+        if render_animations and animation and not is_static:
+            logger.info(f"   🎬 Gerando sequência para {layer_id} (effect={animation.get('effect', '?')})")
+            anim_result = await render_animated_layer(
+                html=html,
+                animation=animation,
+                canvas_width=canvas_width,
+                canvas_height=canvas_height,
+                fps=fps,
+                google_fonts=google_fonts,
+            )
+
+            if out_dir:
+                # Salvar frames em subdiretório
+                frames_dir = out_dir / f"{layer_id}_frames"
+                frames_dir.mkdir(parents=True, exist_ok=True)
+                for f_data in anim_result["frames"]:
+                    f_path = frames_dir / f"frame_{f_data['frame']:04d}.png"
+                    f_path.write_bytes(base64.b64decode(f_data["png_base64"]))
+                anim_result["frames_dir"] = str(frames_dir)
+                # Não retornar base64 dos frames quando salvou em disco
+                anim_result["frames"] = [
+                    {"frame": f["frame"], "png_path": str(frames_dir / f"frame_{f['frame']:04d}.png")}
+                    for f in anim_result["frames"]
+                ]
+
+            rendered["animation_sequence"] = anim_result
 
         rendered_layers.append(rendered)
         logger.info(f"   ✅ {layer_id} ({layer_type}): {result['width']}x{result['height']}")

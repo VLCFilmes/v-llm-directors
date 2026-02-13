@@ -17,6 +17,7 @@ from app.directors.level_0.visual_layout_director_1 import get_visual_layout_dir
 from app.orchestrator.context_builder import get_context_builder
 from app.renderer.playwright_renderer import (
     render_layer_to_png,
+    render_animated_layer,
     render_scene_layers,
     shutdown_browser,
 )
@@ -374,6 +375,20 @@ class RenderLayerRequest(BaseModel):
     google_fonts: Optional[List[str]] = Field(default=None, description="Fontes Google")
 
 
+class RenderAnimatedLayerRequest(BaseModel):
+    """Request para renderizar layer animada como PNG sequence"""
+    html: str = Field(..., description="HTML inline da layer")
+    animation: Dict = Field(
+        ...,
+        description="Config de animação: {effect, duration_ms, delay_ms, easing}",
+        json_schema_extra={"example": {"effect": "fade_in", "duration_ms": 500, "delay_ms": 0, "easing": "ease-out"}},
+    )
+    canvas_width: int = Field(default=720)
+    canvas_height: int = Field(default=1280)
+    fps: int = Field(default=30, description="Frames por segundo")
+    google_fonts: Optional[List[str]] = Field(default=None, description="Fontes Google")
+
+
 class RenderSceneRequest(BaseModel):
     """Request para renderizar todas layers de uma cena"""
     scene: Dict = Field(..., description="Objeto scene do Director v1")
@@ -381,6 +396,8 @@ class RenderSceneRequest(BaseModel):
     canvas_height: int = Field(default=1280)
     google_fonts: Optional[List[str]] = Field(default=None)
     output_dir: Optional[str] = Field(default=None, description="Se informado, salva PNGs em disco")
+    render_animations: bool = Field(default=False, description="Se True, gera PNG sequences para layers animadas")
+    fps: int = Field(default=30, description="FPS para animações")
 
 
 @app.post("/render/layer")
@@ -404,12 +421,37 @@ async def api_render_layer(request: RenderLayerRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/render/animated-layer")
+async def api_render_animated_layer(request: RenderAnimatedLayerRequest):
+    """
+    Renderiza uma layer animada como sequência de PNGs transparentes.
+
+    Retorna array de frames com base64 + metadata da animação.
+    Efeitos suportados: fade_in, scale_up, scale_down, slide_up, slide_down,
+                        slide_left, slide_right, bounce_in, fade_out, scale_out.
+    """
+    try:
+        result = await render_animated_layer(
+            html=request.html,
+            animation=request.animation,
+            canvas_width=request.canvas_width,
+            canvas_height=request.canvas_height,
+            fps=request.fps,
+            google_fonts=request.google_fonts,
+        )
+        return {"status": "success", **result}
+    except Exception as e:
+        logger.error(f"❌ Erro no render/animated-layer: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/render/scene")
 async def api_render_scene(request: RenderSceneRequest):
     """
     Renderiza todas as layers de uma cena → PNGs + metadata.
 
     Se output_dir for informado, salva PNGs em disco (mais eficiente para pipeline).
+    Se render_animations=True, layers com animation geram PNG sequences.
     Caso contrário, retorna base64 no JSON.
     """
     try:
@@ -419,6 +461,8 @@ async def api_render_scene(request: RenderSceneRequest):
             canvas_height=request.canvas_height,
             google_fonts=request.google_fonts,
             output_dir=request.output_dir,
+            render_animations=request.render_animations,
+            fps=request.fps,
         )
         return {"status": "success", **result}
     except Exception as e:
@@ -444,6 +488,8 @@ async def api_render_full_pipeline(request: Dict):
 
         canvas = request.get("canvas", {"width": 720, "height": 1280})
         output_dir = request.get("output_dir")
+        render_animations = request.get("render_animations", False)
+        fps = request.get("fps", 30)
 
         # 1) Gerar layout via LLM
         context_builder = get_context_builder()
@@ -479,6 +525,8 @@ async def api_render_full_pipeline(request: Dict):
                 canvas_height=canvas.get("height", 1280),
                 google_fonts=google_fonts,
                 output_dir=scene_out_dir,
+                render_animations=render_animations,
+                fps=fps,
             )
             rendered_scenes.append(rendered)
 
